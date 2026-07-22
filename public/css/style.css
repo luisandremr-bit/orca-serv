@@ -29,6 +29,13 @@ body {
   margin-bottom: 36px;
 }
 
+.landing-logo-img {
+  width: 220px;
+  height: auto;
+  margin-bottom: 8px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.15));
+}
+
 .landing-logo {
   font-size: 2.8rem;
   font-weight: 800;
@@ -193,6 +200,13 @@ body {
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 1px;
+}
+
+.sidebar-logo-img {
+  width: 170px;
+  height: auto;
+  filter: brightness(0) invert(1);
+  margin-bottom: 4px;
 }
 
 .sidebar .logo small {
@@ -631,7 +645,8 @@ body {
   input, select, textarea { font-size: 16px !important; }
 
   .auth-container { max-width: 100%; }
-  .landing-logo { font-size: 2.2rem; }
+  .landing-logo-img { width: 180px; }
+  .sidebar-logo-img { width: 140px; }
   .auth-card { padding: 24px 20px; }
   .benefit-item { padding: 12px 14px; }
 }
