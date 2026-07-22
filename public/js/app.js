@@ -2,8 +2,124 @@ const API = '';
 let orcamentoAtual = null;
 let todosClientes = [];
 let configEmpresa = { nome_empresa: '', cpf_cnpj: '', email: '', telefone: '', logo: '' };
+let usuarioLogado = null;
 
-// ========== NAVEGACAO ==========
+// ==================== AUTH ====================
+async function verificarSessao() {
+  try {
+    const res = await fetch(API + '/api/auth/me');
+    if (res.ok) {
+      const user = await res.json();
+      usuarioLogado = user;
+      mostrarApp();
+      return true;
+    }
+  } catch (e) {}
+  mostrarAuth();
+  return false;
+}
+
+function mostrarAuth() {
+  document.getElementById('auth-screen').style.display = '';
+  document.getElementById('app-screen').style.display = 'none';
+}
+
+function mostrarApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'flex';
+  document.getElementById('sidebarEmpresa').textContent = usuarioLogado.empresa || usuarioLogado.usuario;
+  initApp();
+}
+
+function mostrarLogin(e) {
+  if (e) e.preventDefault();
+  document.getElementById('auth-landing').classList.add('active');
+  document.getElementById('auth-registro').classList.remove('active');
+  document.getElementById('loginErro').style.display = 'none';
+  document.getElementById('registroErro').style.display = 'none';
+}
+
+function mostrarRegistro(e) {
+  if (e) e.preventDefault();
+  document.getElementById('auth-landing').classList.remove('active');
+  document.getElementById('auth-registro').classList.add('active');
+  document.getElementById('loginErro').style.display = 'none';
+  document.getElementById('registroErro').style.display = 'none';
+}
+
+function mostrarErroLogin(msg) {
+  const el = document.getElementById('loginErro');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function mostrarErroRegistro(msg) {
+  const el = document.getElementById('registroErro');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function fazerLogin() {
+  const usuario = document.getElementById('loginUsuario').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  if (!usuario || !senha) { mostrarErroLogin('Preencha usuario e senha'); return; }
+  try {
+    const res = await fetch(API + '/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario, senha })
+    });
+    const data = await res.json();
+    if (!res.ok) { mostrarErroLogin(data.erro || 'Erro ao fazer login'); return; }
+    usuarioLogado = data;
+    mostrarApp();
+  } catch (e) {
+    mostrarErroLogin('Erro de conexao');
+  }
+}
+
+async function fazerRegistro() {
+  const empresa = document.getElementById('regEmpresa').value.trim();
+  const cnpj = document.getElementById('regCnpj').value.trim();
+  const telefone = document.getElementById('regTelefone').value.trim();
+  const endereco = document.getElementById('regEndereco').value.trim();
+  const whatsapp = document.getElementById('regWhatsapp').value.trim();
+  const instagram = document.getElementById('regInstagram').value.trim();
+  const usuario = document.getElementById('regUsuario').value.trim();
+  const senha = document.getElementById('regSenha').value;
+
+  if (!empresa) { mostrarErroRegistro('Nome da empresa e obrigatorio'); return; }
+  if (!usuario) { mostrarErroRegistro('Escolha um usuario'); return; }
+  if (!senha || senha.length < 4) { mostrarErroRegistro('Senha deve ter no minimo 4 caracteres'); return; }
+
+  try {
+    const res = await fetch(API + '/api/auth/cadastrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ empresa, cnpj, telefone, endereco, whatsapp, instagram, usuario, senha })
+    });
+    const data = await res.json();
+    if (!res.ok) { mostrarErroRegistro(data.erro || 'Erro ao criar conta'); return; }
+    usuarioLogado = data;
+    mostrarApp();
+  } catch (e) {
+    mostrarErroRegistro('Erro de conexao');
+  }
+}
+
+function fazerLogout(e) {
+  if (e) e.preventDefault();
+  fetch(API + '/api/auth/logout', { method: 'POST' }).finally(() => {
+    usuarioLogado = null;
+    orcamentoAtual = null;
+    configEmpresa = { nome_empresa: '', cpf_cnpj: '', email: '', telefone: '', logo: '' };
+    document.getElementById('loginUsuario').value = '';
+    document.getElementById('loginSenha').value = '';
+    mostrarAuth();
+  });
+}
+
+// ==================== NAVEGACAO ====================
 document.querySelectorAll('.sidebar nav a').forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
@@ -26,7 +142,7 @@ document.getElementById('mobileToggle').addEventListener('click', () => {
   document.getElementById('sidebar').classList.toggle('open');
 });
 
-// ========== UTILS ==========
+// ==================== UTILS ====================
 function formatarMoeda(valor) {
   return 'R$ ' + parseFloat(valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -47,10 +163,14 @@ function fecharModal(id) { document.getElementById(id).classList.remove('active'
 
 async function apiFetch(url, options = {}) {
   const res = await fetch(API + url, { headers: { 'Content-Type': 'application/json' }, ...options });
+  if (res.status === 401) {
+    mostrarAuth();
+    throw new Error('Nao autenticado');
+  }
   return res.json();
 }
 
-// ========== DASHBOARD ==========
+// ==================== DASHBOARD ====================
 async function carregarDashboard() {
   const data = await apiFetch('/api/dashboard');
   document.getElementById('dashboardCards').innerHTML = `
@@ -114,7 +234,7 @@ async function carregarDashboard() {
   document.getElementById('parcelasAlertList').innerHTML = parcelasHtml;
 }
 
-// ========== CLIENTES ==========
+// ==================== CLIENTES ====================
 async function carregarClientes() {
   todosClientes = await apiFetch('/api/clientes');
   renderizarClientes(todosClientes);
@@ -173,15 +293,12 @@ async function salvarCliente() {
     endereco: document.getElementById('clienteEndereco').value,
     observacoes: document.getElementById('clienteObs').value
   };
-
   if (!dados.nome) { alert('Nome e obrigatorio!'); return; }
-
   if (id) {
     await apiFetch('/api/clientes/' + id, { method: 'PUT', body: JSON.stringify(dados) });
   } else {
     await apiFetch('/api/clientes', { method: 'POST', body: JSON.stringify(dados) });
   }
-
   fecharModal('modalCliente');
   carregarClientes();
 }
@@ -192,7 +309,7 @@ async function excluirCliente(id) {
   carregarClientes();
 }
 
-// ========== ORCAMENTOS ==========
+// ==================== ORCAMENTOS ====================
 async function carregarClientesSelect() {
   const clientes = await apiFetch('/api/clientes');
   const select = document.getElementById('orcamentoCliente');
@@ -203,13 +320,11 @@ async function carregarOrcamentos() {
   const status = document.getElementById('filtroStatus').value;
   const url = status ? `/api/orcamentos?status=${status}` : '/api/orcamentos';
   const orcamentos = await apiFetch(url);
-
   const tbody = document.querySelector('#tabelaOrcamentos tbody');
   if (orcamentos.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Nenhum orcamento encontrado</p></td></tr>';
     return;
   }
-
   tbody.innerHTML = orcamentos.map(o => `
     <tr>
       <td><strong>#${o.id}</strong></td>
@@ -240,9 +355,7 @@ async function abrirModalOrcamento(orcamento = null) {
   document.getElementById('orcamentoValidade').value = orcamento ? orcamento.data_validade : '';
   document.getElementById('orcamentoValor').value = orcamento ? orcamento.valor_total : '';
   document.getElementById('orcamentoObs').value = orcamento ? orcamento.observacoes : '';
-
   document.getElementById('itensOrcamento').innerHTML = '';
-
   if (orcamento && orcamento.id) {
     const detalhes = await apiFetch('/api/orcamentos/' + orcamento.id);
     if (detalhes.itens && detalhes.itens.length > 0) {
@@ -253,7 +366,6 @@ async function abrirModalOrcamento(orcamento = null) {
   } else {
     adicionarItem();
   }
-
   abrirModal('modalOrcamento');
 }
 
@@ -270,10 +382,8 @@ function adicionarItem(item = null) {
     <button class="remove-item-btn" onclick="this.parentElement.remove();recalcularTotal();">&times;</button>
   `;
   container.appendChild(row);
-
   row.querySelector('.item-qtd').addEventListener('input', () => { atualizarTotalItem(row); recalcularTotal(); });
   row.querySelector('.item-valor').addEventListener('input', () => { atualizarTotalItem(row); recalcularTotal(); });
-
   if (item) atualizarTotalItem(row);
 }
 
@@ -306,7 +416,6 @@ async function salvarOrcamento() {
       });
     }
   });
-
   const dados = {
     cliente_id: document.getElementById('orcamentoCliente').value,
     titulo: document.getElementById('orcamentoTitulo').value,
@@ -317,15 +426,12 @@ async function salvarOrcamento() {
     observacoes: document.getElementById('orcamentoObs').value,
     itens
   };
-
   if (!dados.cliente_id || !dados.titulo) { alert('Cliente e Titulo sao obrigatorios!'); return; }
-
   if (id) {
     await apiFetch('/api/orcamentos/' + id, { method: 'PUT', body: JSON.stringify(dados) });
   } else {
     await apiFetch('/api/orcamentos', { method: 'POST', body: JSON.stringify(dados) });
   }
-
   fecharModal('modalOrcamento');
   carregarOrcamentos();
 }
@@ -344,7 +450,6 @@ async function excluirOrcamento(id) {
 async function verOrcamento(id) {
   const o = await apiFetch('/api/orcamentos/' + id);
   orcamentoAtual = o;
-
   let itensHtml = '';
   if (o.itens && o.itens.length > 0) {
     itensHtml = `<table class="table-custom" style="margin-top:12px;"><thead><tr><th>Item</th><th>Qtd</th><th>Valor Unit.</th><th>Total</th></tr></thead><tbody>`;
@@ -353,7 +458,6 @@ async function verOrcamento(id) {
     });
     itensHtml += `</tbody></table>`;
   }
-
   let parcelasHtml = '';
   if (o.parcelas && o.parcelas.length > 0) {
     parcelasHtml = `<div class="section-divider">Parcelas</div><table class="table-custom"><thead><tr><th>#</th><th>Valor</th><th>Vencimento</th><th>Pagamento</th><th>Status</th></tr></thead><tbody>`;
@@ -362,7 +466,6 @@ async function verOrcamento(id) {
     });
     parcelasHtml += `</tbody></table>`;
   }
-
   document.getElementById('detalhesOrcamento').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
       <div><strong>Cliente:</strong> ${o.cliente_nome}</div>
@@ -385,12 +488,11 @@ async function verOrcamento(id) {
   abrirModal('modalVerOrcamento');
 }
 
-// ========== PARCELAS ==========
+// ==================== PARCELAS ====================
 async function carregarParcelas() {
   const status = document.getElementById('filtroParcelas').value;
   const url = status ? `/api/parcelas?status=${status}` : '/api/parcelas';
   const parcelas = await apiFetch(url);
-
   const pendentes = parcelas.filter(p => p.status === 'pendente');
   const pagas = parcelas.filter(p => p.status === 'pago');
   const totalPendente = pendentes.reduce((s, p) => s + p.valor, 0);
@@ -414,7 +516,6 @@ async function carregarParcelas() {
     tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><p>Nenhuma parcela encontrada</p></td></tr>';
     return;
   }
-
   tbody.innerHTML = parcelas.map(p => {
     const hoje = new Date();
     const venc = new Date(p.data_vencimento + 'T00:00:00');
@@ -459,17 +560,15 @@ async function gerarParcelas() {
   const orcamentoId = document.getElementById('parcelasOrcamentoId').value;
   const qtd = parseInt(document.getElementById('qtdParcelas').value);
   const data = document.getElementById('dataPrimeiraParcela').value;
-
   await apiFetch('/api/orcamentos/' + orcamentoId + '/gerar-parcelas', {
     method: 'POST',
     body: JSON.stringify({ quantidade_parcelas: qtd, data_primeira_parcela: data })
   });
-
   fecharModal('modalParcelasOrcamento');
   alert('Parcelas geradas com sucesso!');
 }
 
-// ========== RELATORIOS ==========
+// ==================== RELATORIOS ====================
 async function carregarRelatorios() {
   const dados = await apiFetch('/api/relatorios/resumo');
   const faturamento = await apiFetch('/api/relatorios/faturamento-mensal');
@@ -526,7 +625,7 @@ async function carregarRelatorios() {
   document.getElementById('relatorioStatus').innerHTML = statusHtml;
 }
 
-// ========== PDF ==========
+// ==================== PDF ====================
 async function gerarPDF(id) {
   const o = await apiFetch('/api/orcamentos/' + id);
   await carregarConfigParaPDF();
@@ -546,9 +645,7 @@ function criarPDF(o) {
   const temEmpresa = configEmpresa.nome_empresa || configEmpresa.cpf_cnpj || configEmpresa.email || configEmpresa.telefone;
 
   if (temLogo) {
-    try {
-      doc.addImage(configEmpresa.logo, 'AUTO', 14, startY, 50, 30);
-    } catch(e) {}
+    try { doc.addImage(configEmpresa.logo, 'AUTO', 14, startY, 50, 30); } catch(e) {}
     if (temEmpresa) {
       let infoY = startY + 5;
       doc.setFontSize(10);
@@ -648,12 +745,12 @@ function criarPDF(o) {
 
   doc.setFontSize(7);
   doc.setTextColor(170);
-  doc.text('Gerado por OrcaServ - ' + new Date().toLocaleDateString('pt-BR'), 14, 290);
+  doc.text('Gerado por OrcaFacil - ' + new Date().toLocaleDateString('pt-BR'), 14, 290);
 
   doc.save('orcamento-' + o.id + '.pdf');
 }
 
-// ========== WHATSAPP ==========
+// ==================== WHATSAPP ====================
 async function enviarWhatsApp(id) {
   const o = await apiFetch('/api/orcamentos/' + id);
   enviarWhatsAppComDados(o);
@@ -675,30 +772,27 @@ function enviarWhatsAppComDados(o) {
     o.itens.forEach(i => { msg += `- ${i.descricao}: ${i.quantidade}x ${formatarMoeda(i.valor_unitario)} = ${formatarMoeda(i.valor_total)}\n`; });
   }
   msg += `\nAguardamos seu retorno!`;
-
   const telefone = (o.cliente_telefone || '').replace(/\D/g, '');
   const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(msg)}`;
   window.open(url, '_blank');
 }
 
-// ========== EMAIL ==========
+// ==================== EMAIL ====================
 function enviarEmailAtual() {
   if (!orcamentoAtual) return;
   const email = orcamentoAtual.cliente_email;
   if (!email) { alert('Cliente nao possui email cadastrado!'); return; }
-
   let msg = `Orcamento #${orcamentoAtual.id} - ${orcamentoAtual.titulo}\n\n`;
   msg += `Cliente: ${orcamentoAtual.cliente_nome}\n`;
   if (orcamentoAtual.descricao) msg += `Descricao: ${orcamentoAtual.descricao}\n`;
   msg += `\nValor Total: ${formatarMoeda(orcamentoAtual.valor_total)}\n`;
   if (orcamentoAtual.data_validade) msg += `Validade: ${formatarData(orcamentoAtual.data_validade)}\n`;
-
   const assunto = encodeURIComponent(`Orcamento #${orcamentoAtual.id} - ${orcamentoAtual.titulo}`);
   const corpo = encodeURIComponent(msg);
   window.open(`mailto:${email}?subject=${assunto}&body=${corpo}`, '_blank');
 }
 
-// ========== CONFIGURACOES ==========
+// ==================== CONFIGURACOES ====================
 async function carregarConfiguracoes() {
   configEmpresa = await apiFetch('/api/configuracoes');
   document.getElementById('cfgNome').value = configEmpresa.nome_empresa || '';
@@ -724,8 +818,7 @@ function carregarLogo(event) {
   const reader = new FileReader();
   reader.onload = function(e) {
     configEmpresa.logo = e.target.result;
-    const preview = document.getElementById('logoPreview');
-    preview.innerHTML = '<img src="' + e.target.result + '" style="max-height:80px;max-width:250px;border:1px solid #ddd;border-radius:8px;padding:8px;background:#fafafa;">';
+    document.getElementById('logoPreview').innerHTML = '<img src="' + e.target.result + '" style="max-height:80px;max-width:250px;border:1px solid #ddd;border-radius:8px;padding:8px;background:#fafafa;">';
     document.getElementById('btnRemoverLogo').style.display = 'inline-block';
   };
   reader.readAsDataURL(file);
@@ -752,9 +845,24 @@ async function carregarConfigParaPDF() {
   }
 }
 
-// ========== INIT ==========
+// ==================== INIT ====================
 async function initApp() {
   await carregarConfigParaPDF();
   carregarDashboard();
 }
-initApp();
+
+// Verificar sessao ao carregar
+document.addEventListener('DOMContentLoaded', () => {
+  verificarSessao();
+});
+
+// Enter pra login
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    if (document.getElementById('auth-landing').classList.contains('active')) {
+      fazerLogin();
+    } else if (document.getElementById('auth-registro').classList.contains('active')) {
+      fazerRegistro();
+    }
+  }
+});

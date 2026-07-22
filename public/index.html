@@ -4,183 +4,285 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1a237e">
-  <meta name="description" content="Sistema completo de orcamentos para prestadores de servicos">
+  <meta name="description" content="OrcaFacil - Sistema completo de orcamentos para prestadores de servicos">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="OrcaServ">
+  <meta name="apple-mobile-web-app-title" content="OrcaFacil">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-  <title>OrçaServ - Controle de Orcamentos</title>
+  <title>OrcaFacil - Orcamentos Profissionais</title>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.1/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
 
-  <aside class="sidebar" id="sidebar">
-    <div class="logo">
-      <h2>OrçaServ</h2>
-      <small>Controle de Orcamentos</small>
-    </div>
-    <nav>
-      <a href="#" data-page="dashboard" class="active"><span class="icon">&#9632;</span> Dashboard</a>
-      <a href="#" data-page="clientes"><span class="icon">&#9787;</span> Clientes</a>
-      <a href="#" data-page="orcamentos"><span class="icon">&#9998;</span> Orcamentos</a>
-      <a href="#" data-page="parcelas"><span class="icon">&#9733;</span> Parcelas</a>
-      <a href="#" data-page="relatorios"><span class="icon">&#9783;</span> Relatorios</a>
-      <a href="#" data-page="configuracoes"><span class="icon">&#9881;</span> Dados da Empresa</a>
-    </nav>
-  </aside>
+  <!-- TELA DE AUTH (Landing + Login + Registro) -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-container">
 
-  <button class="mobile-toggle" id="mobileToggle">&#9776;</button>
-
-  <main class="main-content">
-
-    <!-- DASHBOARD -->
-    <section id="page-dashboard" class="page-section active">
-      <div class="page-header">
-        <h1>Dashboard</h1>
-      </div>
-      <div class="resumo-grid" id="dashboardCards"></div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
-        <div class="card">
-          <div class="card-header-custom"><h3>Orcamentos Recentes</h3></div>
-          <div class="card-body-custom" id="recentesList"></div>
+      <!-- LANDING PAGE -->
+      <div id="auth-landing" class="auth-section active">
+        <div class="landing-hero">
+          <div class="landing-logo">OrcaFacil</div>
+          <p class="landing-tagline">Transforme a gestao dos seus orcamentos em segundos</p>
         </div>
-        <div class="card">
-          <div class="card-header-custom"><h3>Parcelas Vencendo</h3></div>
-          <div class="card-body-custom" id="parcelasAlertList"></div>
-        </div>
-      </div>
-    </section>
 
-    <!-- CLIENTES -->
-    <section id="page-clientes" class="page-section">
-      <div class="page-header">
-        <h1>Clientes</h1>
-        <button class="btn-primary-custom" onclick="abrirModalCliente()">+ Novo Cliente</button>
-      </div>
-      <div class="card">
-        <div class="card-body-custom">
-          <input type="text" class="form-control-custom" placeholder="Buscar cliente..." id="buscaCliente" oninput="filtrarClientes()" style="margin-bottom:16px; max-width:400px;">
-          <table class="table-custom" id="tabelaClientes">
-            <thead>
-              <tr><th>Nome</th><th>Telefone</th><th>Email</th><th>CPF/CNPJ</th><th>Acoes</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+        <div class="landing-benefits">
+          <div class="benefit-item">
+            <div class="benefit-icon">&#9989;</div>
+            <div><strong>Orcamentos profissionais</strong><br><span>Gere PDFs com a identidade visual da sua empresa em poucos cliques</span></div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">&#128172;</div>
+            <div><strong>Envio direto pelo WhatsApp</strong><br><span>Compartilhe orcamentos com seus clientes na hora</span></div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">&#128202;</div>
+            <div><strong>Controle financeiro completo</strong><br><span>Acompanhe parcelas, faturamento e relatorios em tempo real</span></div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-icon">&#128241;</div>
+            <div><strong>Acesse de qualquer lugar</strong><br><span>Funciona no celular, tablet e computador. Instale como app!</span></div>
+          </div>
+        </div>
+
+        <div class="landing-cta">
+          <p class="cta-text">Comece gratuitamente. Sem cartao de credito. Sem complicacao.</p>
+        </div>
+
+        <div class="auth-card">
+          <h2>Entrar na sua conta</h2>
+          <div id="loginErro" class="auth-error" style="display:none;"></div>
+          <div class="form-group">
+            <label>Usuario</label>
+            <input type="text" id="loginUsuario" class="auth-input" placeholder="Seu usuario" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="loginSenha" class="auth-input" placeholder="Sua senha" autocomplete="current-password">
+          </div>
+          <button class="auth-btn-primary" onclick="fazerLogin()">Entrar</button>
+          <p class="auth-switch">Ainda nao tem conta? <a href="#" onclick="mostrarRegistro(event)">Criar conta gratuita</a></p>
         </div>
       </div>
-    </section>
 
-    <!-- ORCAMENTOS -->
-    <section id="page-orcamentos" class="page-section">
-      <div class="page-header">
-        <h1>Orcamentos</h1>
-        <div style="display:flex; gap:10px;">
-          <select class="form-control-custom" id="filtroStatus" onchange="carregarOrcamentos()" style="width:auto;">
-            <option value="">Todos os Status</option>
-            <option value="pendente">Pendente</option>
-            <option value="aguardando">Aguardando</option>
-            <option value="visualizado">Visualizado</option>
-            <option value="fechado">Fechado</option>
-            <option value="executado">Executado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-          <button class="btn-primary-custom" onclick="abrirModalOrcamento()">+ Novo Orcamento</button>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-body-custom">
-          <table class="table-custom" id="tabelaOrcamentos">
-            <thead>
-              <tr><th>#</th><th>Cliente</th><th>Titulo</th><th>Valor</th><th>Status</th><th>Data</th><th>Acoes</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- PARCELAS -->
-    <section id="page-parcelas" class="page-section">
-      <div class="page-header">
-        <h1>Parcelas</h1>
-      </div>
-      <div class="resumo-grid" id="resumoParcelas" style="margin-bottom:20px;"></div>
-      <div class="card">
-        <div class="card-header-custom">
-          <h3>Todas as Parcelas</h3>
-          <select class="form-control-custom" id="filtroParcelas" onchange="carregarParcelas()" style="width:auto;">
-            <option value="">Todas</option>
-            <option value="pendente">Pendentes</option>
-            <option value="pago">Pagas</option>
-          </select>
-        </div>
-        <div class="card-body-custom">
-          <table class="table-custom" id="tabelaParcelas">
-            <thead>
-              <tr><th>Cliente</th><th>Orcamento</th><th>Parcela</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Acoes</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- RELATORIOS -->
-    <section id="page-relatorios" class="page-section">
-      <div class="page-header"><h1>Relatorios</h1></div>
-      <div class="resumo-grid" id="resumoRelatorios"></div>
-      <div class="card" style="margin-top:20px;">
-        <div class="card-header-custom"><h3>Status dos Orcamentos</h3></div>
-        <div class="card-body-custom" id="relatorioStatus"></div>
-      </div>
-    </section>
-
-    <!-- CONFIGURACOES -->
-    <section id="page-configuracoes" class="page-section">
-      <div class="page-header"><h1>Dados da Empresa / Emitente</h1></div>
-      <div class="card" style="max-width:700px;">
-        <div class="card-body-custom">
-          <p style="color:#777;margin-bottom:20px;font-size:0.9rem;">Essas informacoes serao impressas nos orcamentos em PDF junto com a logomarca.</p>
+      <!-- REGISTRO -->
+      <div id="auth-registro" class="auth-section">
+        <div class="auth-card" style="max-width:550px;">
+          <h2>Criar sua conta</h2>
+          <p class="auth-subtitle">Preencha os dados da sua empresa para comecar</p>
+          <div id="registroErro" class="auth-error" style="display:none;"></div>
 
           <div class="form-group">
-            <label>Logomarca</label>
-            <div id="logoPreview" style="margin-bottom:10px;"></div>
-            <input type="file" id="logoInput" accept="image/*" onchange="carregarLogo(event)" style="display:none;">
-            <button class="btn-secondary-custom" onclick="document.getElementById('logoInput').click()">Escolher Imagem</button>
-            <button class="btn-delete" onclick="removerLogo()" id="btnRemoverLogo" style="display:none;margin-left:8px;">Remover Logo</button>
+            <label>Nome da Empresa / Profissional *</label>
+            <input type="text" id="regEmpresa" class="auth-input" placeholder="Ex: Joao Eletricista">
           </div>
-
-          <div class="form-group">
-            <label>Nome / Razao Social</label>
-            <input type="text" class="form-control-custom" id="cfgNome" placeholder="Nome da empresa ou seu nome">
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
             <div class="form-group">
               <label>CPF / CNPJ</label>
-              <input type="text" class="form-control-custom" id="cfgCpfCnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+              <input type="text" id="regCnpj" class="auth-input" placeholder="000.000.000-00">
             </div>
             <div class="form-group">
               <label>Telefone</label>
-              <input type="text" class="form-control-custom" id="cfgTelefone" placeholder="(00) 00000-0000">
+              <input type="text" id="regTelefone" class="auth-input" placeholder="(00) 00000-0000">
             </div>
           </div>
           <div class="form-group">
-            <label>Email</label>
-            <input type="email" class="form-control-custom" id="cfgEmail" placeholder="email@exemplo.com">
+            <label>Endereco</label>
+            <input type="text" id="regEndereco" class="auth-input" placeholder="Rua, numero, bairro, cidade">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="form-group">
+              <label>WhatsApp</label>
+              <input type="text" id="regWhatsapp" class="auth-input" placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label>Instagram (opcional)</label>
+              <input type="text" id="regInstagram" class="auth-input" placeholder="@seuusuario">
+            </div>
           </div>
 
-          <div style="margin-top:20px;">
-            <button class="btn-primary-custom" onclick="salvarConfiguracoes()">Salvar Dados</button>
+          <div class="auth-divider"></div>
+
+          <div class="form-group">
+            <label>Escolha um Usuario *</label>
+            <input type="text" id="regUsuario" class="auth-input" placeholder="Ex: joao123" autocomplete="username">
           </div>
+          <div class="form-group">
+            <label>Crie uma Senha *</label>
+            <input type="password" id="regSenha" class="auth-input" placeholder="Minimo 4 caracteres" autocomplete="new-password">
+          </div>
+
+          <button class="auth-btn-primary" onclick="fazerRegistro()">Criar Conta e Entrar</button>
+          <p class="auth-switch">Ja tem conta? <a href="#" onclick="mostrarLogin(event)">Fazer login</a></p>
         </div>
       </div>
-    </section>
+    </div>
+  </div>
 
-  </main>
+  <!-- APP (pos-login) -->
+  <div id="app-screen" class="app-screen" style="display:none;">
+
+    <aside class="sidebar" id="sidebar">
+      <div class="logo">
+        <h2>OrcaFacil</h2>
+        <small id="sidebarEmpresa">Minha Empresa</small>
+      </div>
+      <nav>
+        <a href="#" data-page="dashboard" class="active"><span class="icon">&#9632;</span> Dashboard</a>
+        <a href="#" data-page="clientes"><span class="icon">&#9787;</span> Clientes</a>
+        <a href="#" data-page="orcamentos"><span class="icon">&#9998;</span> Orcamentos</a>
+        <a href="#" data-page="parcelas"><span class="icon">&#9733;</span> Parcelas</a>
+        <a href="#" data-page="relatorios"><span class="icon">&#9783;</span> Relatorios</a>
+        <a href="#" data-page="configuracoes"><span class="icon">&#9881;</span> Dados da Empresa</a>
+      </nav>
+      <div class="sidebar-footer">
+        <a href="#" onclick="fazerLogout(event)"><span class="icon">&#10140;</span> Sair</a>
+      </div>
+    </aside>
+
+    <button class="mobile-toggle" id="mobileToggle">&#9776;</button>
+
+    <main class="main-content">
+
+      <section id="page-dashboard" class="page-section active">
+        <div class="page-header">
+          <h1>Dashboard</h1>
+        </div>
+        <div class="resumo-grid" id="dashboardCards"></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
+          <div class="card">
+            <div class="card-header-custom"><h3>Orcamentos Recentes</h3></div>
+            <div class="card-body-custom" id="recentesList"></div>
+          </div>
+          <div class="card">
+            <div class="card-header-custom"><h3>Parcelas Vencendo</h3></div>
+            <div class="card-body-custom" id="parcelasAlertList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-clientes" class="page-section">
+        <div class="page-header">
+          <h1>Clientes</h1>
+          <button class="btn-primary-custom" onclick="abrirModalCliente()">+ Novo Cliente</button>
+        </div>
+        <div class="card">
+          <div class="card-body-custom">
+            <input type="text" class="form-control-custom" placeholder="Buscar cliente..." id="buscaCliente" oninput="filtrarClientes()" style="margin-bottom:16px; max-width:400px;">
+            <table class="table-custom" id="tabelaClientes">
+              <thead>
+                <tr><th>Nome</th><th>Telefone</th><th>Email</th><th>CPF/CNPJ</th><th>Acoes</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-orcamentos" class="page-section">
+        <div class="page-header">
+          <h1>Orcamentos</h1>
+          <div style="display:flex; gap:10px;">
+            <select class="form-control-custom" id="filtroStatus" onchange="carregarOrcamentos()" style="width:auto;">
+              <option value="">Todos os Status</option>
+              <option value="pendente">Pendente</option>
+              <option value="aguardando">Aguardando</option>
+              <option value="visualizado">Visualizado</option>
+              <option value="fechado">Fechado</option>
+              <option value="executado">Executado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+            <button class="btn-primary-custom" onclick="abrirModalOrcamento()">+ Novo Orcamento</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body-custom">
+            <table class="table-custom" id="tabelaOrcamentos">
+              <thead>
+                <tr><th>#</th><th>Cliente</th><th>Titulo</th><th>Valor</th><th>Status</th><th>Data</th><th>Acoes</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-parcelas" class="page-section">
+        <div class="page-header">
+          <h1>Parcelas</h1>
+        </div>
+        <div class="resumo-grid" id="resumoParcelas" style="margin-bottom:20px;"></div>
+        <div class="card">
+          <div class="card-header-custom">
+            <h3>Todas as Parcelas</h3>
+            <select class="form-control-custom" id="filtroParcelas" onchange="carregarParcelas()" style="width:auto;">
+              <option value="">Todas</option>
+              <option value="pendente">Pendentes</option>
+              <option value="pago">Pagas</option>
+            </select>
+          </div>
+          <div class="card-body-custom">
+            <table class="table-custom" id="tabelaParcelas">
+              <thead>
+                <tr><th>Cliente</th><th>Orcamento</th><th>Parcela</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Acoes</th></tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-relatorios" class="page-section">
+        <div class="page-header"><h1>Relatorios</h1></div>
+        <div class="resumo-grid" id="resumoRelatorios"></div>
+        <div class="card" style="margin-top:20px;">
+          <div class="card-header-custom"><h3>Status dos Orcamentos</h3></div>
+          <div class="card-body-custom" id="relatorioStatus"></div>
+        </div>
+      </section>
+
+      <section id="page-configuracoes" class="page-section">
+        <div class="page-header"><h1>Dados da Empresa / Emitente</h1></div>
+        <div class="card" style="max-width:700px;">
+          <div class="card-body-custom">
+            <p style="color:#777;margin-bottom:20px;font-size:0.9rem;">Essas informacoes serao impressas nos orcamentos em PDF junto com a logomarca.</p>
+            <div class="form-group">
+              <label>Logomarca</label>
+              <div id="logoPreview" style="margin-bottom:10px;"></div>
+              <input type="file" id="logoInput" accept="image/*" onchange="carregarLogo(event)" style="display:none;">
+              <button class="btn-secondary-custom" onclick="document.getElementById('logoInput').click()">Escolher Imagem</button>
+              <button class="btn-delete" onclick="removerLogo()" id="btnRemoverLogo" style="display:none;margin-left:8px;">Remover Logo</button>
+            </div>
+            <div class="form-group">
+              <label>Nome / Razao Social</label>
+              <input type="text" class="form-control-custom" id="cfgNome" placeholder="Nome da empresa ou seu nome">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label>CPF / CNPJ</label>
+                <input type="text" class="form-control-custom" id="cfgCpfCnpj" placeholder="000.000.000-00 ou 00.000.000/0000-00">
+              </div>
+              <div class="form-group">
+                <label>Telefone</label>
+                <input type="text" class="form-control-custom" id="cfgTelefone" placeholder="(00) 00000-0000">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="form-control-custom" id="cfgEmail" placeholder="email@exemplo.com">
+            </div>
+            <div style="margin-top:20px;">
+              <button class="btn-primary-custom" onclick="salvarConfiguracoes()">Salvar Dados</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
 
   <!-- MODAL CLIENTE -->
   <div class="modal-overlay" id="modalCliente">
@@ -259,11 +361,9 @@
           <label>Descricao</label>
           <textarea class="form-control-custom" id="orcamentoDescricao" rows="3" placeholder="Descricao detalhada do servico"></textarea>
         </div>
-
         <div class="section-divider">Itens do Orcamento</div>
         <div id="itensOrcamento"></div>
         <button class="add-item-btn" onclick="adicionarItem()">+ Adicionar Item</button>
-
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-top:16px;">
           <div class="form-group">
             <label>Data de Validade</label>
