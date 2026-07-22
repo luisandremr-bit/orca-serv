@@ -1,4 +1,4 @@
-const CACHE_NAME = 'orcaserv-v1';
+const CACHE_NAME = 'orcaserv-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -6,7 +6,8 @@ const STATIC_ASSETS = [
   '/js/app.js',
   '/manifest.json',
   '/icons/icon-192.png',
-  '/icons/icon-512.png'
+  '/icons/icon-512.png',
+  '/logo-white.svg'
 ];
 
 self.addEventListener('install', (event) => {
