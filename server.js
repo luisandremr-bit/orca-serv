@@ -59,6 +59,10 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
   res.json(db.dashboard());
 });
 
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

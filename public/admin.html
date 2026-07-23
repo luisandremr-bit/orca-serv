@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>OrcaFacil - Painel Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; min-height: 100vh; }
+
+    .admin-login-screen {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0d1b3e 0%, #1a237e 100%);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .admin-login-card {
+      background: white; border-radius: 16px; padding: 36px 32px; width: 100%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .admin-login-card h1 { font-size: 1.3rem; color: #1a237e; text-align: center; margin-bottom: 4px; }
+    .admin-login-card p { color: #999; font-size: 0.82rem; text-align: center; margin-bottom: 24px; }
+    .admin-login-card label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.85rem; color: #555; }
+    .admin-login-card input {
+      width: 100%; padding: 12px 14px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 0.95rem; margin-bottom: 16px;
+    }
+    .admin-login-card input:focus { outline: none; border-color: #1a237e; box-shadow: 0 0 0 3px rgba(26,35,126,0.1); }
+    .admin-error { background: #fce4ec; color: #c62828; padding: 10px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 16px; display: none; border: 1px solid #f8bbd0; }
+    .btn-login {
+      width: 100%; background: linear-gradient(135deg, #1a237e, #283593); color: white; border: none;
+      padding: 13px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer;
+    }
+    .btn-login:hover { box-shadow: 0 4px 16px rgba(26,35,126,0.35); }
+
+    .admin-dashboard { display: none; min-height: 100vh; padding: 24px; }
+    .admin-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+    }
+    .admin-header h1 { font-size: 1.4rem; color: #1a237e; }
+    .btn-logout {
+      background: #fce4ec; color: #c62828; border: 1px solid #f8bbd0; padding: 8px 20px;
+      border-radius: 8px; font-size: 0.85rem; cursor: pointer; font-weight: 600;
+    }
+    .btn-logout:hover { background: #f8bbd0; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .stat-card {
+      background: white; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid;
+    }
+    .stat-card .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .stat-value { font-size: 1.6rem; font-weight: 700; color: #333; margin-top: 4px; }
+    .stat-card.free { border-left-color: #e65100; }
+    .stat-card.full { border-left-color: #2e7d32; }
+    .stat-card.total { border-left-color: #1a237e; }
+
+    .admin-table-card {
+      background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;
+    }
+    .admin-table-card h2 { font-size: 1.05rem; color: #333; padding: 16px 20px; border-bottom: 1px solid #eee; }
+    table.admin-table { width: 100%; border-collapse: collapse; }
+    table.admin-table th {
+      background: #f8f9fa; padding: 12px 16px; text-align: left; font-size: 0.8rem; color: #555;
+      text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #eee;
+    }
+    table.admin-table td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem; color: #333; }
+    table.admin-table tr:hover td { background: #f8f9ff; }
+    .plan-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+    }
+    .plan-free { background: #fff3e0; color: #e65100; }
+    .plan-full { background: #e8f5e9; color: #2e7d32; }
+    .btn-toggle {
+      padding: 6px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-upgrade { background: #e8f5e9; color: #2e7d32; }
+    .btn-upgrade:hover { background: #c8e6c9; }
+    .btn-downgrade { background: #fff3e0; color: #e65100; }
+    .btn-downgrade:hover { background: #ffe0b2; }
+    .empty-msg { padding: 40px; text-align: center; color: #999; }
+    @media (max-width: 600px) {
+      .admin-dashboard { padding: 16px; }
+      table.admin-table th, table.admin-table td { padding: 8px 10px; font-size: 0.8rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN ADMIN -->
+  <div id="adminLoginScreen" class="admin-login-screen">
+    <div class="admin-login-card">
+      <h1>&#128737; Painel Administrativo</h1>
+      <p>OrcaFacil - Controle de Usuarios</p>
+      <div id="adminLoginErro" class="admin-error"></div>
+      <label>Usuario</label>
+      <input type="text" id="adminUser" placeholder="admin" autocomplete="username">
+      <label>Senha</label>
+      <input type="password" id="adminPass" placeholder="Senha" autocomplete="current-password">
+      <button class="btn-login" onclick="adminLogin()">Entrar</button>
+    </div>
+  </div>
+
+  <!-- DASHBOARD ADMIN -->
+  <div id="adminDashboard" class="admin-dashboard">
+    <div class="admin-header">
+      <h1>&#128737; Controle de Planos</h1>
+      <button class="btn-logout" onclick="adminLogout()">Sair</button>
+    </div>
+    <div class="stats-row" id="adminStats"></div>
+    <div class="admin-table-card">
+      <h2>Todos os Usuarios</h2>
+      <div id="adminTableWrap"></div>
+    </div>
+  </div>
+
+  <script>
+    async function adminCheckSession() {
+      try {
+        const res = await fetch('/api/auth/admin/check');
+        const data = await res.json();
+        if (data.admin) {
+          document.getElementById('adminLoginScreen').style.display = 'none';
+          document.getElementById('adminDashboard').style.display = 'block';
+          loadAdminUsers();
+        }
+      } catch (e) {}
+    }
+
+    async function adminLogin() {
+      const user = document.getElementById('adminUser').value.trim();
+      const pass = document.getElementById('adminPass').value;
+      const erroEl = document.getElementById('adminLoginErro');
+      if (!user || !pass) { erroEl.textContent = 'Preencha usuario e senha'; erroEl.style.display = 'block'; return; }
+      try {
+        const res = await fetch('/api/auth/admin/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario: user, senha: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) { erroEl.textContent = data.erro || 'Credenciais invalidas'; erroEl.style.display = 'block'; return; }
+        document.getElementById('adminLoginScreen').style.display = 'none';
+        document.getElementById('adminDashboard').style.display = 'block';
+        loadAdminUsers();
+      } catch (e) {
+        erroEl.textContent = 'Erro de conexao'; erroEl.style.display = 'block';
+      }
+    }
+
+    async function adminLogout() {
+      await fetch('/api/auth/admin/logout', { method: 'POST' });
+      document.getElementById('adminDashboard').style.display = 'none';
+      document.getElementById('adminLoginScreen').style.display = 'flex';
+    }
+
+    async function loadAdminUsers() {
+      try {
+        const res = await fetch('/api/auth/admin/usuarios');
+        const users = await res.json();
+        const freeCount = users.filter(u => (u.plano || 'free') === 'free').length;
+        const fullCount = users.filter(u => u.plano === 'full').length;
+        document.getElementById('adminStats').innerHTML = `
+          <div class="stat-card total"><div class="stat-label">Total</div><div class="stat-value">${users.length}</div></div>
+          <div class="stat-card free"><div class="stat-label">Plano Gratuito</div><div class="stat-value">${freeCount}</div></div>
+          <div class="stat-card full"><div class="stat-label">Plano Completo</div><div class="stat-value">${fullCount}</div></div>
+        `;
+        if (users.length === 0) {
+          document.getElementById('adminTableWrap').innerHTML = '<div class="empty-msg">Nenhum usuario cadastrado</div>';
+          return;
+        }
+        let html = '<table class="admin-table"><thead><tr><th>ID</th><th>Empresa</th><th>Usuario</th><th>Plano</th><th>Criado em</th><th>Acao</th></tr></thead><tbody>';
+        users.forEach(u => {
+          const plano = u.plano || 'free';
+          const dataCriacao = u.criado_em ? new Date(u.criado_em).toLocaleDateString('pt-BR') : '-';
+          html += `<tr>
+            <td>#${u.id}</td>
+            <td><strong>${u.empresa || '-'}</strong></td>
+            <td>${u.usuario}</td>
+            <td><span class="plan-badge plan-${plano}">${plano === 'full' ? 'Completo' : 'Gratuito'}</span></td>
+            <td>${dataCriacao}</td>
+            <td>${plano === 'free'
+              ? `<button class="btn-toggle btn-upgrade" onclick="togglePlano(${u.id}, 'full')">&#9650; Ativar Full</button>`
+              : `<button class="btn-toggle btn-downgrade" onclick="togglePlano(${u.id}, 'free')">&#9660; Reverter Free</button>`
+            }</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('adminTableWrap').innerHTML = html;
+      } catch (e) {
+        document.getElementById('adminTableWrap').innerHTML = '<div class="empty-msg">Erro ao carregar usuarios</div>';
+      }
+    }
+
+    async function togglePlano(userId, novoPlano) {
+      const acao = novoPlano === 'full' ? 'ATIVAR Plano Completo' : 'REVERTER para Plano Gratuito';
+      if (!confirm(acao + '?')) return;
+      try {
+        await fetch('/api/auth/admin/usuarios/' + userId + '/plano', {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ plano: novoPlano })
+        });
+        loadAdminUsers();
+      } catch (e) {
+        alert('Erro ao alterar plano');
+      }
+    }
+
+    document.getElementById('adminPass').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') adminLogin();
+    });
+
+    adminCheckSession();
+  </script>
+</body>
+</html>

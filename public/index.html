@@ -49,7 +49,7 @@
         </div>
 
         <div class="landing-cta">
-          <p class="cta-text">Comece gratuitamente. Sem cart&#227;o de cr&#233;dito. Sem complica&#231;&#227;o.</p>
+          <p class="cta-text">Comece gratuitamente com 5 orcamentos por mes. Sem cart&#227;o de cr&#233;dito.</p>
         </div>
 
         <div class="auth-card">
@@ -139,6 +139,13 @@
         <a href="#" data-page="configuracoes"><span class="icon">&#9881;</span> Dados da Empresa</a>
       </nav>
       <div class="sidebar-footer">
+        <div style="padding:12px 20px;border-top:1px solid rgba(255,255,255,0.1);">
+          <div id="sidebarPlanInfo"></div>
+          <div class="limit-bar" id="sidebarLimitBarWrap" style="margin-top:6px;">
+            <div class="limit-bar-fill" id="sidebarLimitBar" style="width:0%"></div>
+          </div>
+          <div id="sidebarLimitText" style="color:rgba(255,255,255,0.5);font-size:0.7rem;margin-top:4px;"></div>
+        </div>
         <a href="#" onclick="fazerLogout(event)"><span class="icon">&#10140;</span> Sair</a>
       </div>
     </aside>
@@ -424,6 +431,25 @@
       <div class="modal-footer-custom">
         <button class="btn-secondary-custom" onclick="fecharModal('modalParcelasOrcamento')">Cancelar</button>
         <button class="btn-primary-custom" onclick="gerarParcelas()">Gerar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL LIMITE ATINGIDO -->
+  <div class="modal-overlay" id="modalLimite">
+    <div class="modal-content" style="max-width:420px;text-align:center;">
+      <div class="modal-body-custom" style="padding:32px 28px;">
+        <div style="font-size:3rem;margin-bottom:12px;">&#128680;</div>
+        <h2 style="color:#1a237e;margin-bottom:8px;">Limite Atingido!</h2>
+        <p style="color:#666;margin-bottom:6px;font-size:0.95rem;">Voce atingiu o limite de <strong>5 orcamentos</strong> do plano gratuito.</p>
+        <p style="color:#666;margin-bottom:20px;font-size:0.95rem;">Fale com nosso time pelo WhatsApp para ativar o <strong>Plano Completo</strong> por apenas <strong style="color:#2e7d32;">R$ 29,90/mes</strong>.</p>
+        <a id="btnWhatsAppUpgrade" href="#" target="_blank" class="btn-whatsapp-upgrade">
+          &#128172; Falar no WhatsApp
+        </a>
+        <p style="color:#999;font-size:0.8rem;margin-top:16px;">Sem compromisso. Ativacao imediata apos confirme do pagamento.</p>
+        <div style="margin-top:16px;">
+          <button class="btn-secondary-custom" onclick="fecharModal('modalLimite')" style="font-size:0.85rem;">Fechar</button>
+        </div>
       </div>
     </div>
   </div>

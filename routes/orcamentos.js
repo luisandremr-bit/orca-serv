@@ -18,6 +18,15 @@ router.get('/:id', (req, res) => {
 router.post('/', (req, res) => {
   const { cliente_id, titulo, descricao, valor_total, data_validade, observacoes, itens } = req.body;
   if (!cliente_id || !titulo) return res.status(400).json({ erro: 'Cliente e titulo sao obrigatorios' });
+  const { usuarios } = require('../database');
+  const user = usuarios.get(req.session.userId);
+  const plano = user ? user.plano : 'free';
+  if (plano === 'free') {
+    const usado = req.db.contarOrcamentosMes();
+    if (usado >= 5) {
+      return res.status(403).json({ erro: 'limite_atingido', mensagem: 'Voce atingiu o limite de 5 orcamentos do plano gratuito. Faca upgrade para o plano completo!' });
+    }
+  }
   const orcamento = req.db.orcamentos.insert({ cliente_id, titulo, descricao, valor_total, data_validade, observacoes, itens });
   res.status(201).json(orcamento);
 });

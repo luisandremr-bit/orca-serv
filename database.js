@@ -70,25 +70,26 @@ const usuarios = {
       instagram: dados.instagram || '',
       usuario: dados.usuario,
       senha: hashSenha(dados.senha),
+      plano: 'free',
       criado_em: new Date().toISOString()
     };
     lista.push(usuario);
     saveJson(USERS_FILE, lista);
     userDir(id);
-    return { id: usuario.id, empresa: usuario.empresa, usuario: usuario.usuario, criado_em: usuario.criado_em };
+    return { id: usuario.id, empresa: usuario.empresa, usuario: usuario.usuario, plano: usuario.plano, criado_em: usuario.criado_em };
   },
   login(usuario, senha) {
     const lista = this.all();
     const u = lista.find(x => x.usuario === usuario);
     if (!u) return null;
     if (!verificarSenha(senha, u.senha)) return null;
-    return { id: u.id, empresa: u.empresa, usuario: u.usuario };
+    return { id: u.id, empresa: u.empresa, usuario: u.usuario, plano: u.plano || 'free' };
   },
   get(userId) {
     const lista = this.all();
     const u = lista.find(x => x.id === Number(userId));
     if (!u) return null;
-    return { id: u.id, empresa: u.empresa, cnpj: u.cnpj, endereco: u.endereco, telefone: u.telefone, whatsapp: u.whatsapp, instagram: u.instagram, usuario: u.usuario, criado_em: u.criado_em };
+    return { id: u.id, empresa: u.empresa, cnpj: u.cnpj, endereco: u.endereco, telefone: u.telefone, whatsapp: u.whatsapp, instagram: u.instagram, usuario: u.usuario, plano: u.plano || 'free', criado_em: u.criado_em };
   },
   update(userId, dados) {
     const lista = this.all();
@@ -100,6 +101,14 @@ const usuarios = {
     if (dados.telefone !== undefined) lista[idx].telefone = dados.telefone;
     if (dados.whatsapp !== undefined) lista[idx].whatsapp = dados.whatsapp;
     if (dados.instagram !== undefined) lista[idx].instagram = dados.instagram;
+    saveJson(USERS_FILE, lista);
+    return this.get(userId);
+  },
+  updatePlano(userId, plano) {
+    const lista = this.all();
+    const idx = lista.findIndex(x => x.id === Number(userId));
+    if (idx === -1) return null;
+    lista[idx].plano = plano;
     saveJson(USERS_FILE, lista);
     return this.get(userId);
   }
@@ -118,6 +127,12 @@ function criarDb(userId) {
   function save(file, data) { saveJson(file, data); }
 
   return {
+    contarOrcamentosMes() {
+      const items = load(FILES.orcamentos);
+      const mesAtual = new Date().toISOString().substring(0, 7);
+      return items.filter(o => (o.data_orcamento || '').startsWith(mesAtual)).length;
+    },
+
     clientes: {
       all() { return load(FILES.clientes).sort((a, b) => (a.nome || '').localeCompare(b.nome || '')); },
       get(id) { return load(FILES.clientes).find(c => c.id === Number(id)) || null; },

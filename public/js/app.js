@@ -3,6 +3,14 @@ let orcamentoAtual = null;
 let todosClientes = [];
 let configEmpresa = { nome_empresa: '', cpf_cnpj: '', email: '', telefone: '', logo: '' };
 let usuarioLogado = null;
+let infoLimite = null;
+
+const WHATSAPP_NUMERO = '5511985970052';
+const WHATSAPP_MSG = encodeURIComponent('Ola! Quero ativar o Plano Completo do OrcaFacil (R$ 29,90/mes). Meu usuario: ');
+
+function montarWhatsAppUrl(usuario) {
+  return `https://wa.me/${WHATSAPP_NUMERO}?text=${WHATSAPP_MSG}${encodeURIComponent(usuario || '')}`;
+}
 
 // ==================== AUTH ====================
 async function verificarSessao() {
@@ -28,7 +36,37 @@ function mostrarApp() {
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app-screen').style.display = 'flex';
   document.getElementById('sidebarEmpresa').textContent = usuarioLogado.empresa || usuarioLogado.usuario;
+  const plano = usuarioLogado.plano || 'free';
+  document.getElementById('sidebarPlanInfo').innerHTML = plano === 'full'
+    ? '<span class="plan-badge-full">Plano Completo</span>'
+    : '<span class="plan-badge-free">Plano Gratuito</span>';
   initApp();
+  carregarLimite();
+}
+
+async function carregarLimite() {
+  try {
+    const data = await apiFetch('/api/auth/limite');
+    infoLimite = data;
+    const barEl = document.getElementById('sidebarLimitBar');
+    const textEl = document.getElementById('sidebarLimitText');
+    if (barEl && textEl && data.plano === 'free') {
+      const pct = Math.min(100, (data.usado / 5) * 100);
+      barEl.style.width = pct + '%';
+      barEl.className = 'limit-bar-fill' + (pct >= 100 ? ' danger' : pct >= 60 ? ' warning' : '');
+      textEl.textContent = data.usado + '/5 orcamentos este mes';
+    } else if (barEl && textEl) {
+      barEl.style.width = '100%';
+      barEl.className = 'limit-bar-fill';
+      textEl.textContent = 'Sem limite';
+    }
+  } catch (e) {}
+}
+
+function mostrarLimiteModal() {
+  const btn = document.getElementById('btnWhatsAppUpgrade');
+  if (btn) btn.href = montarWhatsAppUrl(usuarioLogado ? usuarioLogado.usuario : '');
+  abrirModal('modalLimite');
 }
 
 function mostrarLogin(e) {
@@ -345,6 +383,16 @@ async function carregarOrcamentos() {
 }
 
 async function abrirModalOrcamento(orcamento = null) {
+  if (!orcamento && usuarioLogado && (usuarioLogado.plano || 'free') === 'free') {
+    try {
+      const lim = await apiFetch('/api/auth/limite');
+      infoLimite = lim;
+      if (lim.usado >= 5) {
+        mostrarLimiteModal();
+        return;
+      }
+    } catch (e) {}
+  }
   await carregarClientesSelect();
   document.getElementById('modalOrcamentoTitulo').textContent = orcamento ? 'Editar Orcamento' : 'Novo Orcamento';
   document.getElementById('orcamentoId').value = orcamento ? orcamento.id : '';
@@ -427,13 +475,32 @@ async function salvarOrcamento() {
     itens
   };
   if (!dados.cliente_id || !dados.titulo) { alert('Cliente e Titulo sao obrigatorios!'); return; }
-  if (id) {
-    await apiFetch('/api/orcamentos/' + id, { method: 'PUT', body: JSON.stringify(dados) });
-  } else {
-    await apiFetch('/api/orcamentos', { method: 'POST', body: JSON.stringify(dados) });
+  try {
+    if (id) {
+      await apiFetch('/api/orcamentos/' + id, { method: 'PUT', body: JSON.stringify(dados) });
+    } else {
+      const res = await fetch(API + '/api/orcamentos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dados)
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        if (res.status === 403 && result.erro === 'limite_atingido') {
+          fecharModal('modalOrcamento');
+          mostrarLimiteModal();
+          return;
+        }
+        alert(result.erro || 'Erro ao salvar orcamento');
+        return;
+      }
+    }
+    fecharModal('modalOrcamento');
+    carregarOrcamentos();
+    carregarLimite();
+  } catch (e) {
+    alert('Erro de conexao');
   }
-  fecharModal('modalOrcamento');
-  carregarOrcamentos();
 }
 
 async function editarOrcamento(id) {

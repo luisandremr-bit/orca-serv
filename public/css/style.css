@@ -610,6 +610,67 @@ body {
 
 .mobile-toggle { display: none; }
 
+.btn-whatsapp-upgrade {
+  display: inline-block;
+  background: #25d366;
+  color: white;
+  border: none;
+  padding: 14px 32px;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+}
+
+.btn-whatsapp-upgrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(37,211,102,0.4);
+  background: #20bd5a;
+}
+
+.plan-badge-free {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.plan-badge-full {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.limit-bar {
+  height: 6px;
+  background: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.limit-bar-fill {
+  height: 100%;
+  background: #1a237e;
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.limit-bar-fill.warning { background: #f57f17; }
+.limit-bar-fill.danger { background: #c62828; }
+
 /* ==================== MOBILE ==================== */
 @media (max-width: 768px) {
   .sidebar { transform: translateX(-100%); width: 280px; }
